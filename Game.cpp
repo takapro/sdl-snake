@@ -50,6 +50,8 @@ void Game::ProcessInput()
 	if (state[SDL_SCANCODE_ESCAPE]) {
 		isRunning = false;
 	}
+
+	ProcessKeyboard(state);
 }
 
 void Game::UpdateGame()
@@ -62,14 +64,8 @@ void Game::UpdateGame()
 		deltaTime = 0.05f;
 	}
 	ticksCount = SDL_GetTicks();
-}
 
-void Game::GenerateOutput()
-{
-	SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-	SDL_RenderClear(renderer);
-
-	SDL_RenderPresent(renderer);
+	UpdateGame(deltaTime);
 }
 
 void Game::Shutdown()
