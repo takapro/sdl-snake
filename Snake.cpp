@@ -1,7 +1,9 @@
 #include "Snake.h"
 #include "Circle.h"
+#include <algorithm>
 #include <stdlib.h>
 #include <math.h>
+#include <time.h>
 
 #define min(x, y) (x < y ? x : y)
 
@@ -12,11 +14,14 @@ bool Snake::Initialize()
 	}
 
 	snakeSize = 4;
-	for (int i = 0; i <= snakeSize; i++) {
+	for (int i = 0; i <= snakeSize; ++i) {
 		snake.push_back(Cell(3 + i, 5));
 	}
 	progress = 0;
 	direction = Cell(1, 0);
+
+	srand(time(NULL));
+	fruitPos = Cell(12, 5);
 
 	return true;
 }
@@ -37,15 +42,31 @@ void Snake::ProcessKeyboard(const Uint8* state)
 void Snake::UpdateGame(float deltaTime)
 {
 	progress += deltaTime * 4;
+
+	if (progress >= 0.5f) {
+		Cell head = snake.back();
+		if ((head.x < 0 || head.x >= SCREEN_WIDTH / CELL_SIZE) ||
+			(head.y < 0 || head.y >= SCREEN_HEIGHT / CELL_SIZE) ||
+			std::find(snake.begin() + 1, snake.end() - 1, head) != snake.end() - 1) {
+			isRunning = false;
+		}
+	}
+
 	if (progress >= 1.0f) {
 		progress -= 1.0f;
-		Cell cell = snake.back();
-		cell.x += direction.x;
-		cell.y += direction.y;
-		snake.push_back(cell);
-	}
-	if (snake.size() > snakeSize + 1) {
-		snake.pop_front();
+		if (snake.size() > snakeSize) {
+			snake.pop_front();
+		}
+		Cell head = snake.back();
+		snake.push_back(head + direction);
+
+		if (head == fruitPos) {
+			++snakeSize;
+			do {
+				fruitPos.x = rand() % (SCREEN_WIDTH / CELL_SIZE);
+				fruitPos.y = rand() % (SCREEN_HEIGHT / CELL_SIZE);
+			} while (std::find(snake.begin(), snake.end(), fruitPos) != snake.end());
+		}
 	}
 }
 
@@ -64,6 +85,12 @@ void Snake::GenerateOutput()
 			SDL_RenderFillRect(renderer, &cell);
 		}
 	}
+
+	SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
+	SDL_RenderFillCircle(renderer,
+		fruitPos.x * CELL_SIZE + CELL_SIZE / 2,
+		fruitPos.y * CELL_SIZE + CELL_SIZE / 2,
+		SNAKE_RADIUS);
 
 	SDL_SetRenderDrawColor(renderer, 0, 64, 255, 255);
 	for (int i = 0; i < snake.size() - 1; ++i) {
