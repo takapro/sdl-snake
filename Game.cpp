@@ -1,23 +1,6 @@
-#include <SDL2/SDL.h>
+#include "Game.h"
 
-// constants
-
-const char* WINDOW_TITLE = "SDL Game (2D)";
-
-const int SCREEN_WIDTH = 1024;
-const int SCREEN_HEIGHT = 768;
-
-// global variables
-
-SDL_Window* window;
-SDL_Renderer* renderer;
-
-bool isRunning;
-int ticksCount;
-
-// functions
-
-bool Initialize()
+bool Game::Initialize()
 {
 	if (SDL_Init(SDL_INIT_VIDEO) != 0) {
 		SDL_Log("Unable to initialize SDL: %s", SDL_GetError());
@@ -37,12 +20,22 @@ bool Initialize()
 		return false;
 	}
 
+	isRunning = true;
 	ticksCount = SDL_GetTicks();
 
 	return true;
 }
 
-void ProcessInput()
+void Game::RunLoop()
+{
+	while (isRunning) {
+		ProcessInput();
+		UpdateGame();
+		GenerateOutput();
+	}
+}
+
+void Game::ProcessInput()
 {
 	SDL_Event event;
 	while (SDL_PollEvent(&event)) {
@@ -59,7 +52,7 @@ void ProcessInput()
 	}
 }
 
-void UpdateGame()
+void Game::UpdateGame()
 {
 	while (!SDL_TICKS_PASSED(SDL_GetTicks(), ticksCount + 16)) {
 	}
@@ -71,7 +64,7 @@ void UpdateGame()
 	ticksCount = SDL_GetTicks();
 }
 
-void GenerateOutput()
+void Game::GenerateOutput()
 {
 	SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
 	SDL_RenderClear(renderer);
@@ -79,24 +72,9 @@ void GenerateOutput()
 	SDL_RenderPresent(renderer);
 }
 
-void Shutdown()
+void Game::Shutdown()
 {
 	SDL_DestroyRenderer(renderer);
 	SDL_DestroyWindow(window);
 	SDL_Quit();
-}
-
-int main(int argc, char** argv)
-{
-	isRunning = Initialize();
-
-	while (isRunning) {
-		ProcessInput();
-		UpdateGame();
-		GenerateOutput();
-	}
-
-	Shutdown();
-
-	return 0;
 }

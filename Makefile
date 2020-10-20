@@ -1,5 +1,5 @@
 PROGRAM = game
-OBJS = Game.o
+OBJS = Main.o Game.o
 
 CXX = c++ -Wall --std=c++17
 LIBS = -lSDL2
