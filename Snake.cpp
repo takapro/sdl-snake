@@ -1,5 +1,9 @@
 #include "Snake.h"
 #include "Circle.h"
+#include <stdlib.h>
+#include <math.h>
+
+#define min(x, y) (x < y ? x : y)
 
 bool Snake::Initialize()
 {
@@ -8,19 +12,41 @@ bool Snake::Initialize()
 	}
 
 	snakeSize = 4;
-	for (int i = 0; i < snakeSize; i++) {
+	for (int i = 0; i <= snakeSize; i++) {
 		snake.push_back(Cell(3 + i, 5));
 	}
+	progress = 0;
+	direction = Cell(1, 0);
 
 	return true;
 }
 
 void Snake::ProcessKeyboard(const Uint8* state)
 {
+	if (state[SDL_SCANCODE_UP]) {
+		direction = Cell(0, -1);
+	} else if (state[SDL_SCANCODE_DOWN]) {
+		direction = Cell(0, 1);
+	} else if (state[SDL_SCANCODE_LEFT]) {
+		direction = Cell(-1, 0);
+	} else if (state[SDL_SCANCODE_RIGHT]) {
+		direction = Cell(1, 0);
+	}
 }
 
 void Snake::UpdateGame(float deltaTime)
 {
+	progress += deltaTime * 4;
+	if (progress >= 1.0f) {
+		progress -= 1.0f;
+		Cell cell = snake.back();
+		cell.x += direction.x;
+		cell.y += direction.y;
+		snake.push_back(cell);
+	}
+	if (snake.size() > snakeSize + 1) {
+		snake.pop_front();
+	}
 }
 
 void Snake::GenerateOutput()
@@ -40,28 +66,39 @@ void Snake::GenerateOutput()
 	}
 
 	SDL_SetRenderDrawColor(renderer, 0, 64, 255, 255);
-	for (int i = 0; i < snake.size(); ++i) {
+	for (int i = 0; i < snake.size() - 1; ++i) {
 		Cell cell = snake[i];
+		Cell next = snake[i + 1];
 		int x = cell.x * CELL_SIZE + CELL_SIZE / 2;
 		int y = cell.y * CELL_SIZE + CELL_SIZE / 2;
+		int x2 = next.x * CELL_SIZE + CELL_SIZE / 2;
+		int y2 = next.y * CELL_SIZE + CELL_SIZE / 2;
+		if (i == 0 && snake.size() == snakeSize + 1) {
+			x += static_cast<int>(roundf((x2 - x) * progress));
+			y += static_cast<int>(roundf((y2 - y) * progress));
+		} else if (i == snake.size() - 2) {
+			x2 = x + static_cast<int>(roundf((x2 - x) * progress));
+			y2 = y + static_cast<int>(roundf((y2 - y) * progress));
+		}
 		SDL_RenderFillCircle(renderer, x, y, SNAKE_RADIUS);
 
-		if (i < snake.size() - 1) {
-			Cell next = snake[i + 1];
-			SDL_Rect rect = { x, y, CELL_SIZE, CELL_SIZE };
-			if (cell.x == next.x) {
-				rect.x -= SNAKE_RADIUS;
-				rect.y -= cell.y > next.y ? CELL_SIZE : 0;
-				rect.w = SNAKE_RADIUS * 2 + 1;
-			} else {
-				rect.x -= cell.x > next.x ? CELL_SIZE : 0;
-				rect.y -= SNAKE_RADIUS;
-				rect.h = SNAKE_RADIUS * 2 + 1;
-			}
-			SDL_RenderFillRect(renderer, &rect);
+		SDL_Rect rect = { min(x, x2), min(y, y2), abs(x2 - x), abs(y2 - y) };
+		if (cell.x == next.x) {
+			rect.x -= SNAKE_RADIUS;
+			rect.w = SNAKE_RADIUS * 2 + 1;
 		} else {
+			rect.y -= SNAKE_RADIUS;
+			rect.h = SNAKE_RADIUS * 2 + 1;
+		}
+		SDL_RenderFillRect(renderer, &rect);
+
+		if (i == snake.size() - 2) {
+			x = x2;
+			y = y2;
+			SDL_RenderFillCircle(renderer, x, y, SNAKE_RADIUS);
+
 			SDL_SetRenderDrawColor(renderer, 255, 255, 0, 255);
-			if (cell.x == snake[i - 1].x) {
+			if (cell.x == next.x) {
 				SDL_RenderFillCircle(renderer, x - SNAKE_RADIUS / 2, y, SNAKE_RADIUS / 4);
 				SDL_RenderFillCircle(renderer, x + SNAKE_RADIUS / 2, y, SNAKE_RADIUS / 4);
 			} else {

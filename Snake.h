@@ -6,6 +6,7 @@ struct Cell {
 	int x;
 	int y;
 
+	Cell() {}
 	Cell(int x, int y) : x(x), y(y) {}
 };
 
@@ -23,4 +24,6 @@ private:
 
 	int snakeSize;
 	std::deque<Cell> snake;
+	float progress;
+	Cell direction;
 };
