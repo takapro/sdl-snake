@@ -3,7 +3,7 @@
 
 class Game {
 public:
-	static constexpr const char* WINDOW_TITLE = "SDL Game (2D)";
+	static constexpr const char* WINDOW_TITLE = "Snake Game (CMPT 1267 Project 2)";
 
 	static constexpr int SCREEN_WIDTH = 1024;
 	static constexpr int SCREEN_HEIGHT = 768;

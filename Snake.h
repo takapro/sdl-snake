@@ -1,5 +1,6 @@
 #pragma once
 #include "Game.h"
+#include <SDL2/SDL_ttf.h>
 #include <deque>
 
 struct Cell {
@@ -21,6 +22,7 @@ public:
 	static constexpr int INITIAL_LENGTH = 4;
 
 	bool Initialize();
+	void Shutdown();
 
 private:
 	void ResetGame();
@@ -29,6 +31,11 @@ private:
 	void UpdateGame(float deltaTime) override;
 	void GenerateOutput() override;
 
+	void RenderText(const char* text, int x, int y);
+
+	TTF_Font *font;
+
+	int highScore;
 	bool gameOver;
 
 	int snakeLength;

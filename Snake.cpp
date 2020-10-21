@@ -1,6 +1,8 @@
 #include "Snake.h"
 #include "Circle.h"
 #include <algorithm>
+#include <sstream>
+#include <string>
 #include <stdlib.h>
 #include <math.h>
 #include <time.h>
@@ -13,10 +15,30 @@ bool Snake::Initialize()
 		return false;
 	}
 
+	if (TTF_Init() != 0) {
+		SDL_Log("Unable to initialize TTF: %s", TTF_GetError());
+		return false;
+	}
+
+	font = TTF_OpenFont("Snake Chan.ttf", 96);
+	if (!font) {
+		SDL_Log("Failed to load font: %s", TTF_GetError());
+		return false;
+	}
+
+	highScore = 0;
+
 	srand(time(NULL));
 	ResetGame();
 
 	return true;
+}
+
+void Snake::Shutdown()
+{
+	TTF_CloseFont(font);
+	TTF_Quit();
+	Game::Shutdown();
 }
 
 void Snake::ResetGame()
@@ -161,7 +183,32 @@ void Snake::GenerateOutput()
 		SDL_Rect rect = { 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT };
 		SDL_RenderFillRect(renderer, &rect);
 		SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_NONE);
+
+		int score = snakeLength - INITIAL_LENGTH;
+		if (score > highScore) {
+			highScore = score;
+		}
+		RenderText("Game Over", SCREEN_WIDTH / 2, SCREEN_HEIGHT / 5);
+		std::stringstream scoreStream;
+		scoreStream << "Score " << score;
+		RenderText(scoreStream.str().c_str(), SCREEN_WIDTH / 2, SCREEN_HEIGHT * 2 / 5);
+		std::stringstream highScoreStream;
+		highScoreStream << "High Score " << highScore;
+		RenderText(highScoreStream.str().c_str(), SCREEN_WIDTH / 2, SCREEN_HEIGHT * 3 / 5);
+		RenderText("Press Space", SCREEN_WIDTH / 2, SCREEN_HEIGHT * 4 / 5);
 	}
 
 	SDL_RenderPresent(renderer);
+}
+
+void Snake::RenderText(const char* text, int x, int y)
+{
+	SDL_Color color = { 255, 255, 255, 255 };
+	SDL_Surface* surface = TTF_RenderUTF8_Blended(font, text, color);
+	SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, surface);
+	SDL_Rect textRect = { 0, 0, surface->w, surface->h };
+	SDL_Rect rect = { x - surface->w / 2, y - surface->h / 2, surface->w, surface->h };
+	SDL_RenderCopy(renderer, texture, &textRect, &rect);
+	SDL_DestroyTexture(texture);
+	SDL_FreeSurface(surface);
 }
