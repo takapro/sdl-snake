@@ -13,21 +13,36 @@ bool Snake::Initialize()
 		return false;
 	}
 
-	snakeSize = 4;
-	for (int i = 0; i <= snakeSize; ++i) {
+	srand(time(NULL));
+	ResetGame();
+
+	return true;
+}
+
+void Snake::ResetGame()
+{
+	gameOver = false;
+
+	snakeLength = INITIAL_LENGTH;
+	snake.clear();
+	for (int i = 0; i <= snakeLength; ++i) {
 		snake.push_back(Cell(3 + i, 5));
 	}
 	progress = 0;
 	direction = Cell(1, 0);
 
-	srand(time(NULL));
 	fruitPos = Cell(12, 5);
-
-	return true;
 }
 
 void Snake::ProcessKeyboard(const Uint8* state)
 {
+	if (gameOver) {
+		if (state[SDL_SCANCODE_SPACE]) {
+			ResetGame();
+		}
+		return;
+	}
+
 	if (state[SDL_SCANCODE_UP]) {
 		direction = Cell(0, -1);
 	} else if (state[SDL_SCANCODE_DOWN]) {
@@ -41,27 +56,31 @@ void Snake::ProcessKeyboard(const Uint8* state)
 
 void Snake::UpdateGame(float deltaTime)
 {
+	if (gameOver) {
+		return;
+	}
+
 	progress += deltaTime * 4;
 
-	if (progress >= 0.5f) {
+	if (progress >= 0.3f) {
 		Cell head = snake.back();
 		if ((head.x < 0 || head.x >= SCREEN_WIDTH / CELL_SIZE) ||
 			(head.y < 0 || head.y >= SCREEN_HEIGHT / CELL_SIZE) ||
 			std::find(snake.begin() + 1, snake.end() - 1, head) != snake.end() - 1) {
-			isRunning = false;
+			gameOver = true;
 		}
 	}
 
 	if (progress >= 1.0f) {
 		progress -= 1.0f;
-		if (snake.size() > snakeSize) {
+		if (snake.size() > snakeLength) {
 			snake.pop_front();
 		}
 		Cell head = snake.back();
 		snake.push_back(head + direction);
 
 		if (head == fruitPos) {
-			++snakeSize;
+			++snakeLength;
 			do {
 				fruitPos.x = rand() % (SCREEN_WIDTH / CELL_SIZE);
 				fruitPos.y = rand() % (SCREEN_HEIGHT / CELL_SIZE);
@@ -72,8 +91,6 @@ void Snake::UpdateGame(float deltaTime)
 
 void Snake::GenerateOutput()
 {
-	SDL_RenderClear(renderer);
-
 	for (int y = 0; y < SCREEN_HEIGHT; y += CELL_SIZE) {
 		for (int x = 0; x < SCREEN_WIDTH; x += CELL_SIZE) {
 			if ((x + y) / CELL_SIZE % 2 == 0) {
@@ -100,7 +117,7 @@ void Snake::GenerateOutput()
 		int y = cell.y * CELL_SIZE + CELL_SIZE / 2;
 		int x2 = next.x * CELL_SIZE + CELL_SIZE / 2;
 		int y2 = next.y * CELL_SIZE + CELL_SIZE / 2;
-		if (i == 0 && snake.size() == snakeSize + 1) {
+		if (i == 0 && snake.size() == snakeLength + 1) {
 			x += static_cast<int>(roundf((x2 - x) * progress));
 			y += static_cast<int>(roundf((y2 - y) * progress));
 		} else if (i == snake.size() - 2) {
@@ -122,6 +139,9 @@ void Snake::GenerateOutput()
 		if (i == snake.size() - 2) {
 			x = x2;
 			y = y2;
+			if (gameOver) {
+				SDL_SetRenderDrawColor(renderer, 192, 0, 255, 255);
+			}
 			SDL_RenderFillCircle(renderer, x, y, SNAKE_RADIUS);
 
 			SDL_SetRenderDrawColor(renderer, 255, 255, 0, 255);
@@ -133,6 +153,14 @@ void Snake::GenerateOutput()
 				SDL_RenderFillCircle(renderer, x, y + SNAKE_RADIUS / 2, SNAKE_RADIUS / 4);
 			}
 		}
+	}
+
+	if (gameOver) {
+		SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
+		SDL_SetRenderDrawColor(renderer, 0, 0, 0, 128);
+		SDL_Rect rect = { 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT };
+		SDL_RenderFillRect(renderer, &rect);
+		SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_NONE);
 	}
 
 	SDL_RenderPresent(renderer);

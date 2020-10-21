@@ -18,14 +18,20 @@ public:
 	static constexpr int CELL_SIZE = 64;
 	static constexpr int SNAKE_RADIUS = CELL_SIZE * 3 / 8;
 
+	static constexpr int INITIAL_LENGTH = 4;
+
 	bool Initialize();
 
 private:
+	void ResetGame();
+
 	void ProcessKeyboard(const Uint8* state) override;
 	void UpdateGame(float deltaTime) override;
 	void GenerateOutput() override;
 
-	int snakeSize;
+	bool gameOver;
+
+	int snakeLength;
 	std::deque<Cell> snake;
 	float progress;
 	Cell direction;
