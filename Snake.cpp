@@ -20,11 +20,17 @@ bool Snake::Initialize()
 		return false;
 	}
 
-	font = TTF_OpenFont("Snake Chan.ttf", 96);
+	font = TTF_OpenFont(FONT, FONT_SIZE);
 	if (!font) {
 		SDL_Log("Failed to load font: %s", TTF_GetError());
 		return false;
 	}
+
+	Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048);
+	music = Mix_LoadMUS(MUSIC);
+	turnSound = Mix_LoadWAV(TURN_SOUND);
+	eatSound = Mix_LoadWAV(EAT_SOUND);
+	bangSound = Mix_LoadWAV(BANG_SOUND);
 
 	highScore = 0;
 
@@ -38,6 +44,7 @@ void Snake::Shutdown()
 {
 	TTF_CloseFont(font);
 	TTF_Quit();
+	Mix_Quit();
 	Game::Shutdown();
 }
 
@@ -52,27 +59,38 @@ void Snake::ResetGame()
 	}
 	progress = 0;
 	direction = Cell(1, 0);
+	prevDirection = direction;
 
 	fruitPos = Cell(12, 5);
+
+	if (!Mix_PlayingMusic()) {
+		Mix_PlayMusic(music, -1);
+	} else {
+		Mix_ResumeMusic();
+	}
 }
 
-void Snake::ProcessKeyboard(const Uint8* state)
+void Snake::ProcessKeydown(SDL_Keycode sym)
 {
 	if (gameOver) {
-		if (state[SDL_SCANCODE_SPACE]) {
+		if (sym == SDLK_SPACE) {
 			ResetGame();
 		}
 		return;
 	}
 
-	if (state[SDL_SCANCODE_UP]) {
+	if (sym == SDLK_UP) {
 		direction = Cell(0, -1);
-	} else if (state[SDL_SCANCODE_DOWN]) {
+	} else if (sym == SDLK_DOWN) {
 		direction = Cell(0, 1);
-	} else if (state[SDL_SCANCODE_LEFT]) {
+	} else if (sym == SDLK_LEFT) {
 		direction = Cell(-1, 0);
-	} else if (state[SDL_SCANCODE_RIGHT]) {
+	} else if (sym == SDLK_RIGHT) {
 		direction = Cell(1, 0);
+	}
+	if (!(direction == prevDirection)) {
+		prevDirection = direction;
+		Mix_PlayChannel(-1, turnSound, 0);
 	}
 }
 
@@ -90,6 +108,8 @@ void Snake::UpdateGame(float deltaTime)
 			(head.y < 0 || head.y >= SCREEN_HEIGHT / CELL_SIZE) ||
 			std::find(snake.begin() + 1, snake.end() - 1, head) != snake.end() - 1) {
 			gameOver = true;
+			Mix_PauseMusic();
+			Mix_PlayChannel(-1, bangSound, 0);
 		}
 	}
 
@@ -107,6 +127,7 @@ void Snake::UpdateGame(float deltaTime)
 				fruitPos.x = rand() % (SCREEN_WIDTH / CELL_SIZE);
 				fruitPos.y = rand() % (SCREEN_HEIGHT / CELL_SIZE);
 			} while (std::find(snake.begin(), snake.end(), fruitPos) != snake.end());
+			Mix_PlayChannel(-1, eatSound, 0);
 		}
 	}
 }

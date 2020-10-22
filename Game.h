@@ -16,7 +16,7 @@ protected:
 	void ProcessInput();
 	void UpdateGame();
 
-	virtual void ProcessKeyboard(const Uint8* state) = 0;
+	virtual void ProcessKeydown(SDL_Keycode sym) = 0;
 	virtual void UpdateGame(float deltaTime) = 0;
 	virtual void GenerateOutput() = 0;
 

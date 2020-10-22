@@ -1,6 +1,7 @@
 #pragma once
 #include "Game.h"
 #include <SDL2/SDL_ttf.h>
+#include <SDL2/SDL_mixer.h>
 #include <deque>
 
 struct Cell {
@@ -21,19 +22,32 @@ public:
 
 	static constexpr int INITIAL_LENGTH = 4;
 
+	static constexpr const char* FONT = "Font/Snake Chan.ttf";
+	static constexpr int FONT_SIZE = 96;
+
+	static constexpr const char* MUSIC = "Audio/bensound-ukulele.wav";
+	static constexpr const char* TURN_SOUND = "Audio/click.wav";
+	static constexpr const char* EAT_SOUND = "Audio/positive.wav";
+	static constexpr const char* BANG_SOUND = "Audio/big-dart.wav";
+
 	bool Initialize();
 	void Shutdown();
 
 private:
 	void ResetGame();
 
-	void ProcessKeyboard(const Uint8* state) override;
+	void ProcessKeydown(SDL_Keycode sym) override;
 	void UpdateGame(float deltaTime) override;
 	void GenerateOutput() override;
 
 	void RenderText(const char* text, int x, int y);
 
 	TTF_Font *font;
+
+	Mix_Music *music;
+	Mix_Chunk *turnSound;
+	Mix_Chunk *eatSound;
+	Mix_Chunk *bangSound;
 
 	int highScore;
 	bool gameOver;
@@ -42,6 +56,7 @@ private:
 	std::deque<Cell> snake;
 	float progress;
 	Cell direction;
+	Cell prevDirection;
 
 	Cell fruitPos;
 };

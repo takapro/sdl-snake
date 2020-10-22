@@ -2,7 +2,7 @@
 
 bool Game::Initialize()
 {
-	if (SDL_Init(SDL_INIT_VIDEO) != 0) {
+	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) != 0) {
 		SDL_Log("Unable to initialize SDL: %s", SDL_GetError());
 		return false;
 	}
@@ -43,15 +43,16 @@ void Game::ProcessInput()
 			case SDL_QUIT:
 				isRunning = false;
 				break;
+
+			case SDL_KEYDOWN:
+				if (event.key.keysym.sym == SDLK_ESCAPE) {
+					isRunning = false;
+				} else {
+					ProcessKeydown(event.key.keysym.sym);
+				}
+				break;
 		}
 	}
-
-	const Uint8* state = SDL_GetKeyboardState(NULL);
-	if (state[SDL_SCANCODE_ESCAPE]) {
-		isRunning = false;
-	}
-
-	ProcessKeyboard(state);
 }
 
 void Game::UpdateGame()
