@@ -3,26 +3,26 @@
 
 class Game {
 public:
-	static constexpr const char* WINDOW_TITLE = "Snake Game (CMPT 1267 Project 2)";
+    static constexpr const char* WINDOW_TITLE = "Snake Game (CMPT 1267 Project 2)";
 
-	static constexpr int SCREEN_WIDTH = 1024;
-	static constexpr int SCREEN_HEIGHT = 768;
+    static constexpr int SCREEN_WIDTH = 1024;
+    static constexpr int SCREEN_HEIGHT = 768;
 
-	bool Initialize();
-	void RunLoop();
-	void Shutdown();
+    bool Initialize();
+    void RunLoop();
+    void Shutdown();
 
 protected:
-	void ProcessInput();
-	void UpdateGame();
+    void ProcessInput();
+    void UpdateGame();
 
-	virtual void ProcessKeydown(SDL_Keycode sym) = 0;
-	virtual void UpdateGame(float deltaTime) = 0;
-	virtual void GenerateOutput() = 0;
+    virtual void ProcessKeydown(SDL_Keycode sym) = 0;
+    virtual void UpdateGame(float deltaTime) = 0;
+    virtual void GenerateOutput() = 0;
 
-	SDL_Window* window;
-	SDL_Renderer* renderer;
+    SDL_Window* window;
+    SDL_Renderer* renderer;
 
-	bool isRunning;
-	int ticksCount;
+    bool isRunning;
+    int ticksCount;
 };
